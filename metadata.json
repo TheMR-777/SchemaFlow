@@ -1,0 +1,5 @@
+{
+  "name": "SchemaFlow",
+  "description": "A minimalist, visual SQL query builder and schema explorer.",
+  "requestFramePermissions": []
+}
