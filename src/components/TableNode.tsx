@@ -15,9 +15,10 @@ interface TableNodeProps {
 
 export const TableNode = memo(({ data, isConnectable }: TableNodeProps) => {
   const { table, nodeId } = data;
-  const { selectedColumns, toggleColumnSelection, spawnJoinedTable, removeTableFromCanvas } = useSchemaStore();
+  const { selectedColumns, toggleColumnSelection, spawnJoinedTable, removeTableFromCanvas, columnSettings, setColumnSetting } = useSchemaStore();
   
   const selected = selectedColumns[nodeId] || [];
+  const settings = columnSettings[nodeId] || {};
 
   return (
     <div className="bg-[#151619] border border-zinc-800/80 rounded-xl shadow-2xl w-72 overflow-hidden flex flex-col font-sans">
@@ -42,14 +43,14 @@ export const TableNode = memo(({ data, isConnectable }: TableNodeProps) => {
           const hasRelation = col.isForeignKey && col.references;
           
           return (
-            <div 
-              key={col.name} 
-              className={cn(
-                "group flex items-center justify-between px-2.5 py-2 rounded-lg text-xs transition-all relative",
-                isSelected ? "bg-indigo-500/10 text-indigo-100" : "hover:bg-zinc-800/50 text-zinc-400"
-              )}
-            >
-              {/* Left Handle (Target) */}
+            <div key={col.name} className="flex flex-col mb-0.5">
+              <div 
+                className={cn(
+                  "group flex items-center justify-between px-2.5 py-2 rounded-lg text-xs transition-all relative",
+                  isSelected ? "bg-indigo-500/10 text-indigo-100 rounded-b-none" : "hover:bg-zinc-800/50 text-zinc-400"
+                )}
+              >
+                {/* Left Handle (Target) */}
               <Handle
                 type="target"
                 position={Position.Left}
@@ -107,9 +108,34 @@ export const TableNode = memo(({ data, isConnectable }: TableNodeProps) => {
                 )}
               />
             </div>
-          );
-        })}
-      </div>
+            
+            {isSelected && (
+              <div className="bg-indigo-500/5 px-2.5 py-2 rounded-b-lg border-t border-indigo-500/10 flex items-center gap-2">
+                <select
+                  className="bg-[#0a0a0a] border border-zinc-800/80 text-zinc-300 text-[10px] rounded px-1.5 py-1 outline-none focus:border-indigo-500/50 transition-colors cursor-pointer"
+                  value={settings[col.name]?.agg || ''}
+                  onChange={(e) => setColumnSetting(nodeId, col.name, { agg: e.target.value })}
+                >
+                  <option value="">No Agg</option>
+                  <option value="COUNT">COUNT</option>
+                  <option value="SUM">SUM</option>
+                  <option value="AVG">AVG</option>
+                  <option value="MIN">MIN</option>
+                  <option value="MAX">MAX</option>
+                </select>
+                <input
+                  type="text"
+                  placeholder="Alias..."
+                  className="bg-[#0a0a0a] border border-zinc-800/80 text-zinc-300 text-[10px] rounded px-2 py-1 w-full outline-none focus:border-indigo-500/50 transition-colors placeholder:text-zinc-600"
+                  value={settings[col.name]?.alias || ''}
+                  onChange={(e) => setColumnSetting(nodeId, col.name, { alias: e.target.value })}
+                />
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
     </div>
   );
 });

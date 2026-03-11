@@ -4,6 +4,18 @@ import { Node, Edge, MarkerType } from '@xyflow/react';
 import dagre from 'dagre';
 
 export interface AppState {
+  bottomPanelTab: 'sql' | 'report';
+  setBottomPanelTab: (tab: 'sql' | 'report') => void;
+  
+  isSidebarOpen: boolean;
+  toggleSidebar: () => void;
+  
+  isBottomPanelOpen: boolean;
+  toggleBottomPanel: () => void;
+  
+  fullscreenView: 'none' | 'canvas' | 'bottom';
+  setFullscreenView: (view: 'none' | 'canvas' | 'bottom') => void;
+
   schema: Schema | null;
   setSchema: (schema: Schema) => void;
   
@@ -17,6 +29,9 @@ export interface AppState {
   
   selectedColumns: Record<string, string[]>; // nodeId -> column names
   toggleColumnSelection: (nodeId: string, columnName: string) => void;
+  
+  columnSettings: Record<string, Record<string, { alias?: string, agg?: string }>>;
+  setColumnSetting: (nodeId: string, columnName: string, setting: { alias?: string, agg?: string }) => void;
   
   spawnJoinedTable: (sourceNodeId: string, sourceColumn: string, targetTableName: string, targetColumn: string) => void;
   
@@ -61,6 +76,18 @@ const getLayoutedElements = (nodes: Node[], edges: Edge[], direction = 'TB') => 
 };
 
 export const useSchemaStore = create<AppState>((set, get) => ({
+  bottomPanelTab: 'sql',
+  setBottomPanelTab: (tab) => set({ bottomPanelTab: tab }),
+  
+  isSidebarOpen: true,
+  toggleSidebar: () => set((state) => ({ isSidebarOpen: !state.isSidebarOpen })),
+  
+  isBottomPanelOpen: true,
+  toggleBottomPanel: () => set((state) => ({ isBottomPanelOpen: !state.isBottomPanelOpen })),
+  
+  fullscreenView: 'none',
+  setFullscreenView: (view) => set({ fullscreenView: view }),
+
   schema: null,
   setSchema: (schema) => set({ schema }),
   
@@ -70,6 +97,21 @@ export const useSchemaStore = create<AppState>((set, get) => ({
   setEdges: (edges) => set({ edges }),
   
   selectedColumns: {},
+  columnSettings: {},
+  
+  setColumnSetting: (nodeId, columnName, setting) => set((state) => {
+    const nodeSettings = state.columnSettings[nodeId] || {};
+    const currentSetting = nodeSettings[columnName] || {};
+    return {
+      columnSettings: {
+        ...state.columnSettings,
+        [nodeId]: {
+          ...nodeSettings,
+          [columnName]: { ...currentSetting, ...setting }
+        }
+      }
+    };
+  }),
   
   addTableToCanvas: (tableName, position = { x: 100, y: 100 }) => {
     const { schema, nodes } = get();

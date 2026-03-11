@@ -21,6 +21,8 @@ import { TableNode } from './TableNode';
 import { JoinEdge } from './JoinEdge';
 import { Network } from 'lucide-react';
 
+import { Maximize2, Minimize2 } from 'lucide-react';
+
 const nodeTypes = {
   tableNode: TableNode,
 };
@@ -30,7 +32,7 @@ const edgeTypes = {
 };
 
 export function Canvas() {
-  const { nodes, edges, setNodes, setEdges, layoutNodes, addTableToCanvas } = useSchemaStore();
+  const { nodes, edges, setNodes, setEdges, layoutNodes, addTableToCanvas, fullscreenView, setFullscreenView } = useSchemaStore();
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const { screenToFlowPosition } = useReactFlow();
 
@@ -110,13 +112,20 @@ export function Canvas() {
           maskColor="rgba(24, 24, 27, 0.7)" 
           className="bg-zinc-900 border-zinc-800"
         />
-        <Panel position="top-right" className="m-4">
+        <Panel position="top-right" className="m-4 flex items-center gap-2">
           <button
             onClick={layoutNodes}
             className="flex items-center gap-2 bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-zinc-300 px-3 py-2 rounded-lg text-xs font-medium transition-colors shadow-lg"
           >
             <Network size={14} />
             Auto Layout
+          </button>
+          <button 
+            onClick={() => setFullscreenView(fullscreenView === 'canvas' ? 'none' : 'canvas')}
+            className="p-2 bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-zinc-300 rounded-lg transition-colors shadow-lg"
+            title={fullscreenView === 'canvas' ? "Exit fullscreen" : "Fullscreen canvas"}
+          >
+            {fullscreenView === 'canvas' ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
           </button>
         </Panel>
       </ReactFlow>

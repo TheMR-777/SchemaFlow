@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { useSchemaStore } from '../store/useSchemaStore';
 import { parseSqlDump } from '../lib/sqlParser';
-import { Database, FileCode2, Plus, Trash2, GripVertical } from 'lucide-react';
+import { Database, FileCode2, Plus, Trash2, GripVertical, PanelLeftClose } from 'lucide-react';
 
 export function Sidebar() {
-  const { schema, setSchema, addTableToCanvas } = useSchemaStore();
+  const { schema, setSchema, addTableToCanvas, toggleSidebar } = useSchemaStore();
   const [sqlInput, setSqlInput] = useState('');
   const [isParsing, setIsParsing] = useState(false);
 
@@ -28,14 +28,23 @@ export function Sidebar() {
 
   return (
     <div className="w-80 bg-[#151619] border-r border-zinc-800/80 flex flex-col h-full font-sans text-zinc-300 shadow-2xl z-20">
-      <div className="p-6 border-b border-zinc-800/80 flex items-center gap-3 bg-[#151619]">
-        <div className="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20 shadow-[0_0_15px_rgba(99,102,241,0.15)]">
-          <Database className="text-indigo-400" size={20} />
+      <div className="p-6 border-b border-zinc-800/80 flex items-center justify-between bg-[#151619]">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20 shadow-[0_0_15px_rgba(99,102,241,0.15)]">
+            <Database className="text-indigo-400" size={20} />
+          </div>
+          <div>
+            <h1 className="text-lg font-semibold text-zinc-100 tracking-tight">SchemaFlow</h1>
+            <p className="text-[11px] text-zinc-500 uppercase tracking-widest font-medium mt-0.5">Visual Query Builder</p>
+          </div>
         </div>
-        <div>
-          <h1 className="text-lg font-semibold text-zinc-100 tracking-tight">SchemaFlow</h1>
-          <p className="text-[11px] text-zinc-500 uppercase tracking-widest font-medium mt-0.5">Visual Query Builder</p>
-        </div>
+        <button 
+          onClick={toggleSidebar}
+          className="text-zinc-500 hover:text-zinc-300 transition-colors p-1.5 hover:bg-zinc-800 rounded-md"
+          title="Close Sidebar"
+        >
+          <PanelLeftClose size={16} />
+        </button>
       </div>
 
       {!schema ? (

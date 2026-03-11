@@ -6,7 +6,7 @@ import { Table } from '../lib/sqlParser';
 import { useState } from 'react';
 
 export function QueryPreview() {
-  const { nodes, edges, selectedColumns } = useSchemaStore();
+  const { nodes, edges, selectedColumns, columnSettings } = useSchemaStore();
   const [copied, setCopied] = useState(false);
 
   const generatedSql = useMemo(() => {
@@ -23,11 +23,30 @@ export function QueryPreview() {
 
     // Collect SELECT columns
     const selectParts: string[] = [];
+    const groupByParts: string[] = [];
+    let hasAgg = false;
+
     nodes.forEach(node => {
       const tableName = (node.data as { table: Table }).table.name;
       const cols = selectedColumns[node.id] || [];
+      const settings = columnSettings[node.id] || {};
+
       cols.forEach(col => {
-        selectParts.push(`${tableName}.${col}`);
+        const { alias, agg } = settings[col] || {};
+        let expr = `${tableName}.${col}`;
+        
+        if (agg) {
+          expr = `${agg}(${expr})`;
+          hasAgg = true;
+        } else {
+          groupByParts.push(`${tableName}.${col}`);
+        }
+
+        if (alias) {
+          expr += ` AS ${alias}`;
+        }
+        
+        selectParts.push(expr);
       });
     });
 
@@ -71,7 +90,11 @@ export function QueryPreview() {
       }
     }
 
-    const rawSql = `SELECT ${selectParts.join(', ')} ${fromPart} ${joins.join(' ')}`;
+    let rawSql = `SELECT ${selectParts.join(', ')} ${fromPart} ${joins.join(' ')}`;
+    
+    if (hasAgg && groupByParts.length > 0) {
+      rawSql += ` GROUP BY ${groupByParts.join(', ')}`;
+    }
     
     try {
       return format(rawSql, { language: 'mysql', keywordCase: 'upper' });
@@ -87,15 +110,11 @@ export function QueryPreview() {
   };
 
   return (
-    <div className="h-72 border-t border-zinc-800/80 bg-[#0a0a0a] flex flex-col font-sans relative z-10 shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
-      <div className="px-5 py-3 border-b border-zinc-800/80 flex items-center justify-between bg-[#151619]">
-        <div className="flex items-center gap-2.5">
-          <Terminal size={16} className="text-indigo-400" />
-          <h3 className="text-xs font-semibold text-zinc-300 uppercase tracking-widest">Generated Query</h3>
-        </div>
+    <div className="h-full flex flex-col bg-[#0a0a0a] relative">
+      <div className="absolute top-4 right-4 z-10">
         <button 
           onClick={handleCopy}
-          className="flex items-center gap-1.5 text-xs font-medium text-zinc-400 hover:text-indigo-300 transition-colors bg-zinc-900 hover:bg-zinc-800 px-2.5 py-1.5 rounded-md border border-zinc-800"
+          className="flex items-center gap-1.5 text-xs font-medium text-zinc-400 hover:text-indigo-300 transition-colors bg-zinc-900/80 hover:bg-zinc-800 px-2.5 py-1.5 rounded-md border border-zinc-700/50 backdrop-blur-sm shadow-lg"
         >
           {copied ? <Check size={14} className="text-emerald-400" /> : <Copy size={14} />}
           {copied ? 'Copied' : 'Copy'}
