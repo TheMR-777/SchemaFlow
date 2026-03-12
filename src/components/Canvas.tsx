@@ -34,7 +34,7 @@ const edgeTypes = {
 export function Canvas() {
   const { nodes, edges, setNodes, setEdges, layoutNodes, addTableToCanvas, fullscreenView, setFullscreenView } = useSchemaStore();
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
-  const { screenToFlowPosition } = useReactFlow();
+  const { screenToFlowPosition, fitView } = useReactFlow();
 
   const onNodesChange = useCallback(
     (changes: NodeChange[]) => setNodes(applyNodeChanges(changes, nodes)),
@@ -88,6 +88,13 @@ export function Canvas() {
     [screenToFlowPosition, addTableToCanvas]
   );
 
+  const handleLayout = useCallback(() => {
+    layoutNodes();
+    setTimeout(() => {
+      fitView({ duration: 800, padding: 0.2 });
+    }, 50);
+  }, [layoutNodes, fitView]);
+
   return (
     <div className="flex-1 h-full bg-[#0a0a0a] relative" ref={reactFlowWrapper}>
       <ReactFlow
@@ -114,7 +121,7 @@ export function Canvas() {
         />
         <Panel position="top-right" className="m-4 flex items-center gap-2">
           <button
-            onClick={layoutNodes}
+            onClick={handleLayout}
             className="flex items-center gap-2 bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-zinc-300 px-3 py-2 rounded-lg text-xs font-medium transition-colors shadow-lg"
           >
             <Network size={14} />

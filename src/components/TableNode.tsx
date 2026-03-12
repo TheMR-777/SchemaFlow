@@ -70,7 +70,7 @@ export const TableNode = memo(({ data, isConnectable }: TableNodeProps) => {
                 position={Position.Left}
                 id={col.name}
                 isConnectable={isConnectable}
-                className="w-2 h-2 !bg-zinc-600 border-none !-left-1.5"
+                className="w-3 h-3 !bg-zinc-600 border-none !-left-1.5 transition-transform hover:scale-150 hover:!bg-indigo-400"
               />
               
               <div className="flex items-center gap-2.5 flex-1 min-w-0">
@@ -117,7 +117,7 @@ export const TableNode = memo(({ data, isConnectable }: TableNodeProps) => {
                 id={col.name}
                 isConnectable={isConnectable}
                 className={cn(
-                  "w-2 h-2 border-none !-right-1.5",
+                  "w-3 h-3 border-none !-right-1.5 transition-transform hover:scale-150 hover:!bg-indigo-400",
                   hasRelation ? "!bg-indigo-500 shadow-[0_0_6px_rgba(99,102,241,0.6)]" : "!bg-zinc-600"
                 )}
               />

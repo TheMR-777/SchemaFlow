@@ -9,6 +9,7 @@ import { BottomPanel } from './components/BottomPanel';
 import { ReactFlowProvider } from '@xyflow/react';
 import { useSchemaStore } from './store/useSchemaStore';
 import { LayoutTemplate, TableProperties, PanelLeftOpen } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 function MainContent() {
   const { fullscreenView, isSidebarOpen, toggleSidebar } = useSchemaStore();
@@ -27,7 +28,19 @@ function MainContent() {
       )}
 
       {fullscreenView !== 'bottom' && <Canvas />}
-      {fullscreenView !== 'canvas' && <BottomPanel />}
+      <AnimatePresence>
+        {fullscreenView !== 'canvas' && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ type: "spring", bounce: 0, duration: 0.3 }}
+            className="flex-shrink-0 z-20"
+          >
+            <BottomPanel />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -38,9 +51,19 @@ export default function App() {
   return (
     <ReactFlowProvider>
       <div className="flex h-screen w-full bg-[#0a0a0a] text-zinc-100 overflow-hidden">
-        {isSidebarOpen && fullscreenView === 'none' && (
-          <Sidebar />
-        )}
+        <AnimatePresence>
+          {isSidebarOpen && fullscreenView === 'none' && (
+            <motion.div
+              initial={{ width: 0, opacity: 0 }}
+              animate={{ width: 320, opacity: 1 }}
+              exit={{ width: 0, opacity: 0 }}
+              transition={{ type: "spring", bounce: 0, duration: 0.3 }}
+              className="h-full flex-shrink-0 overflow-hidden border-r border-zinc-800/80 z-30"
+            >
+              <Sidebar />
+            </motion.div>
+          )}
+        </AnimatePresence>
         <MainContent />
       </div>
     </ReactFlowProvider>
