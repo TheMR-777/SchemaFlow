@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { useSchemaStore } from '../store/useSchemaStore';
 import { parseSqlDump } from '../lib/sqlParser';
-import { Database, FileCode2, Plus, Trash2, GripVertical, PanelLeftClose } from 'lucide-react';
+import { Database, FileCode2, Plus, Trash2, GripVertical, PanelLeftClose, Save, FolderOpen } from 'lucide-react';
 
 export function Sidebar() {
-  const { schema, setSchema, addTableToCanvas, toggleSidebar } = useSchemaStore();
+  const { schema, setSchema, addTableToCanvas, toggleSidebar, saveWorkspace, loadWorkspace } = useSchemaStore();
   const [sqlInput, setSqlInput] = useState('');
   const [isParsing, setIsParsing] = useState(false);
 
@@ -96,7 +96,25 @@ export function Sidebar() {
               </div>
             ))}
           </div>
-          <div className="p-5 border-t border-zinc-800/80 bg-[#151619]">
+          <div className="p-5 border-t border-zinc-800/80 bg-[#151619] flex flex-col gap-3">
+            <div className="flex items-center gap-2">
+              <button 
+                onClick={loadWorkspace}
+                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-zinc-900 border border-zinc-800/80 rounded-lg text-xs font-medium text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 transition-colors"
+                title="Load Workspace"
+              >
+                <FolderOpen size={14} />
+                Load
+              </button>
+              <button 
+                onClick={saveWorkspace}
+                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-indigo-600/10 border border-indigo-500/30 rounded-lg text-xs font-medium text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/20 transition-colors"
+                title="Save Workspace"
+              >
+                <Save size={14} />
+                Save
+              </button>
+            </div>
             <button
               onClick={() => setSchema(null)}
               className="w-full flex items-center justify-center gap-2 text-xs font-medium text-zinc-400 hover:text-red-400 transition-colors py-2 rounded-lg hover:bg-red-500/10 border border-transparent hover:border-red-500/20"

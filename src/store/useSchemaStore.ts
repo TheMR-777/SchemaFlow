@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { Schema, Table } from '../lib/sqlParser';
 import { Node, Edge, MarkerType } from '@xyflow/react';
+import { FilterSetting, QuerySettings } from '../lib/sqlGenerator';
 import dagre from 'dagre';
 
 export interface AppState {
@@ -32,6 +33,17 @@ export interface AppState {
   
   columnSettings: Record<string, Record<string, { alias?: string, agg?: string }>>;
   setColumnSetting: (nodeId: string, columnName: string, setting: { alias?: string, agg?: string }) => void;
+  
+  filters: Record<string, FilterSetting[]>;
+  addFilter: (nodeId: string, filter: Omit<FilterSetting, 'id'>) => void;
+  updateFilter: (nodeId: string, filterId: string, filter: Partial<FilterSetting>) => void;
+  removeFilter: (nodeId: string, filterId: string) => void;
+  
+  querySettings: QuerySettings;
+  setQuerySettings: (settings: Partial<QuerySettings>) => void;
+  
+  saveWorkspace: () => void;
+  loadWorkspace: () => void;
   
   spawnJoinedTable: (sourceNodeId: string, sourceColumn: string, targetTableName: string, targetColumn: string) => void;
   
@@ -98,6 +110,8 @@ export const useSchemaStore = create<AppState>((set, get) => ({
   
   selectedColumns: {},
   columnSettings: {},
+  filters: {},
+  querySettings: {},
   
   setColumnSetting: (nodeId, columnName, setting) => set((state) => {
     const nodeSettings = state.columnSettings[nodeId] || {};
@@ -112,6 +126,72 @@ export const useSchemaStore = create<AppState>((set, get) => ({
       }
     };
   }),
+  
+  addFilter: (nodeId, filter) => set((state) => {
+    const nodeFilters = state.filters[nodeId] || [];
+    const newFilter: FilterSetting = { ...filter, id: `f_${Date.now()}` };
+    return {
+      filters: { ...state.filters, [nodeId]: [...nodeFilters, newFilter] }
+    };
+  }),
+  
+  updateFilter: (nodeId, filterId, filter) => set((state) => {
+    const nodeFilters = state.filters[nodeId] || [];
+    return {
+      filters: {
+        ...state.filters,
+        [nodeId]: nodeFilters.map(f => f.id === filterId ? { ...f, ...filter } : f)
+      }
+    };
+  }),
+  
+  removeFilter: (nodeId, filterId) => set((state) => {
+    const nodeFilters = state.filters[nodeId] || [];
+    return {
+      filters: {
+        ...state.filters,
+        [nodeId]: nodeFilters.filter(f => f.id !== filterId)
+      }
+    };
+  }),
+  
+  setQuerySettings: (settings) => set((state) => ({
+    querySettings: { ...state.querySettings, ...settings }
+  })),
+  
+  saveWorkspace: () => {
+    const state = get();
+    const workspace = {
+      schema: state.schema,
+      nodes: state.nodes,
+      edges: state.edges,
+      selectedColumns: state.selectedColumns,
+      columnSettings: state.columnSettings,
+      filters: state.filters,
+      querySettings: state.querySettings
+    };
+    localStorage.setItem('schemaflow_workspace', JSON.stringify(workspace));
+  },
+  
+  loadWorkspace: () => {
+    const saved = localStorage.getItem('schemaflow_workspace');
+    if (saved) {
+      try {
+        const workspace = JSON.parse(saved);
+        set({
+          schema: workspace.schema || null,
+          nodes: workspace.nodes || [],
+          edges: workspace.edges || [],
+          selectedColumns: workspace.selectedColumns || {},
+          columnSettings: workspace.columnSettings || {},
+          filters: workspace.filters || {},
+          querySettings: workspace.querySettings || {}
+        });
+      } catch (e) {
+        console.error("Failed to load workspace", e);
+      }
+    }
+  },
   
   addTableToCanvas: (tableName, position = { x: 100, y: 100 }) => {
     const { schema, nodes } = get();

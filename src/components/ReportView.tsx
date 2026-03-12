@@ -1,7 +1,9 @@
 import { useMemo } from 'react';
 import { useSchemaStore } from '../store/useSchemaStore';
 import { Table } from '../lib/sqlParser';
-import { FileSpreadsheet, Clock, Database } from 'lucide-react';
+import { FileSpreadsheet, Clock, Database, Download } from 'lucide-react';
+import { generateMockData } from '../lib/mockDataGenerator';
+import { exportToCsv } from '../lib/exportUtils';
 
 export function ReportView() {
   const { nodes, selectedColumns, columnSettings } = useSchemaStore();
@@ -28,25 +30,12 @@ export function ReportView() {
   }, [nodes, selectedColumns, columnSettings]);
 
   const mockData = useMemo(() => {
-    if (columns.length === 0) return [];
-    return Array.from({ length: 25 }).map((_, i) => {
-      const row: Record<string, any> = { _id: i };
-      columns.forEach(c => {
-        const type = c.type.toUpperCase();
-        if (type.includes('INT') || type.includes('NUM') || type.includes('FLOAT')) {
-          row[c.id] = Math.floor(Math.random() * 10000);
-        } else if (type.includes('DATE') || type.includes('TIME')) {
-          const d = new Date(Date.now() - Math.random() * 10000000000);
-          row[c.id] = d.toISOString().split('T')[0];
-        } else if (type.includes('BOOL')) {
-          row[c.id] = Math.random() > 0.5 ? 'true' : 'false';
-        } else {
-          row[c.id] = `val_${Math.random().toString(36).substring(2, 8)}`;
-        }
-      });
-      return row;
-    });
+    return generateMockData(columns, 25);
   }, [columns]);
+
+  const handleExport = () => {
+    exportToCsv('report_data.csv', columns, mockData);
+  };
 
   if (columns.length === 0) {
     return (
@@ -70,6 +59,14 @@ export function ReportView() {
             <p className="text-xs text-zinc-500 mt-1">Simulated data based on your schema</p>
           </div>
           <div className="flex items-center gap-4 text-xs font-medium text-zinc-400 bg-[#151619] px-4 py-2 rounded-lg border border-zinc-800/80 shadow-sm">
+            <button 
+              onClick={handleExport}
+              className="flex items-center gap-1.5 text-indigo-400 hover:text-indigo-300 transition-colors"
+            >
+              <Download size={14} />
+              Export CSV
+            </button>
+            <div className="w-px h-4 bg-zinc-800"></div>
             <div className="flex items-center gap-1.5">
               <Database size={14} className="text-indigo-400" />
               <span>{mockData.length} rows</span>

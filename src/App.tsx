@@ -8,7 +8,7 @@ import { Canvas } from './components/Canvas';
 import { BottomPanel } from './components/BottomPanel';
 import { ReactFlowProvider } from '@xyflow/react';
 import { useSchemaStore } from './store/useSchemaStore';
-import { PanelLeftOpen } from 'lucide-react';
+import { LayoutTemplate, TableProperties, PanelLeftOpen } from 'lucide-react';
 
 function MainContent() {
   const { fullscreenView, isSidebarOpen, toggleSidebar } = useSchemaStore();

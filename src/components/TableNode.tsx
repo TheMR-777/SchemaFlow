@@ -1,9 +1,9 @@
-import { memo } from 'react';
+import { memo, useState } from 'react';
 import { Handle, Position } from '@xyflow/react';
 import { Table, Column } from '../lib/sqlParser';
 import { useSchemaStore } from '../store/useSchemaStore';
 import { cn } from '../lib/utils';
-import { Key, Link2, CheckSquare, Square } from 'lucide-react';
+import { Key, Link2, CheckSquare, Square, Filter, ChevronUp, ChevronDown, Trash2, Plus } from 'lucide-react';
 
 interface TableNodeProps {
   data: {
@@ -15,10 +15,24 @@ interface TableNodeProps {
 
 export const TableNode = memo(({ data, isConnectable }: TableNodeProps) => {
   const { table, nodeId } = data;
-  const { selectedColumns, toggleColumnSelection, spawnJoinedTable, removeTableFromCanvas, columnSettings, setColumnSetting } = useSchemaStore();
+  const { 
+    selectedColumns, 
+    toggleColumnSelection, 
+    spawnJoinedTable, 
+    removeTableFromCanvas, 
+    columnSettings, 
+    setColumnSetting,
+    filters,
+    addFilter,
+    updateFilter,
+    removeFilter
+  } = useSchemaStore();
+  
+  const [showFilters, setShowFilters] = useState(false);
   
   const selected = selectedColumns[nodeId] || [];
   const settings = columnSettings[nodeId] || {};
+  const nodeFilters = filters[nodeId] || [];
 
   return (
     <div className="bg-[#151619] border border-zinc-800/80 rounded-xl shadow-2xl w-72 overflow-hidden flex flex-col font-sans">
@@ -136,6 +150,72 @@ export const TableNode = memo(({ data, isConnectable }: TableNodeProps) => {
         );
       })}
     </div>
+      {/* Filters Section */}
+      <div className="border-t border-zinc-800/80 bg-[#151619]">
+        <button 
+          onClick={() => setShowFilters(!showFilters)}
+          className="w-full flex items-center justify-between px-4 py-2 text-xs font-medium text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50 transition-colors"
+        >
+          <div className="flex items-center gap-2">
+            <Filter size={12} className={nodeFilters.length > 0 ? "text-indigo-400" : ""} />
+            Filters {nodeFilters.length > 0 && `(${nodeFilters.length})`}
+          </div>
+          {showFilters ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+        </button>
+        
+        {showFilters && (
+          <div className="p-3 bg-zinc-900/50 space-y-2 border-t border-zinc-800/50">
+            {nodeFilters.map(filter => (
+              <div key={filter.id} className="flex flex-col gap-2 p-2 bg-[#151619] border border-zinc-800 rounded-md">
+                <div className="flex items-center gap-2">
+                  <select 
+                    value={filter.column}
+                    onChange={(e) => updateFilter(nodeId, filter.id, { column: e.target.value })}
+                    className="flex-1 bg-zinc-900 border border-zinc-700 text-zinc-300 text-[10px] rounded px-1.5 py-1 focus:outline-none focus:border-indigo-500"
+                  >
+                    {table.columns.map(c => (
+                      <option key={c.name} value={c.name}>{c.name}</option>
+                    ))}
+                  </select>
+                  <select 
+                    value={filter.operator}
+                    onChange={(e) => updateFilter(nodeId, filter.id, { operator: e.target.value })}
+                    className="w-16 bg-zinc-900 border border-zinc-700 text-zinc-300 text-[10px] rounded px-1.5 py-1 focus:outline-none focus:border-indigo-500"
+                  >
+                    <option value="=">=</option>
+                    <option value="!=">!=</option>
+                    <option value=">">&gt;</option>
+                    <option value="<">&lt;</option>
+                    <option value=">=">&gt;=</option>
+                    <option value="<=">&lt;=</option>
+                    <option value="LIKE">LIKE</option>
+                  </select>
+                  <button 
+                    onClick={() => removeFilter(nodeId, filter.id)}
+                    className="text-zinc-500 hover:text-red-400 p-1"
+                  >
+                    <Trash2 size={12} />
+                  </button>
+                </div>
+                <input 
+                  type="text"
+                  value={filter.value}
+                  onChange={(e) => updateFilter(nodeId, filter.id, { value: e.target.value })}
+                  placeholder="Value..."
+                  className="w-full bg-zinc-900 border border-zinc-700 text-zinc-300 text-[10px] rounded px-2 py-1 focus:outline-none focus:border-indigo-500"
+                />
+              </div>
+            ))}
+            
+            <button 
+              onClick={() => addFilter(nodeId, { column: table.columns[0]?.name || '', operator: '=', value: '' })}
+              className="w-full flex items-center justify-center gap-1.5 py-1.5 text-[10px] font-medium text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 rounded border border-dashed border-indigo-500/30 transition-colors"
+            >
+              <Plus size={12} /> Add Filter
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 });
