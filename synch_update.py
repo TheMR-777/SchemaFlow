@@ -129,12 +129,11 @@ class PortfolioUpdater:
         with open(new_path, 'r') as f: new_pkg = json.load(f)
 
         # 1. Preserve critical keys
-        if 'homepage' in old_pkg:
-            new_pkg['homepage'] = old_pkg['homepage']
+        for key in ['name', 'version', 'homepage']:
+            if key in old_pkg:
+                new_pkg[key] = old_pkg[key]
         
         # 2. Merge Scripts (Preserve existing custom scripts, update/overwrite core ones from new)
-        # Protocol says: Preserve 'predeploy'/'deploy'.
-        # Strategy: Start with new scripts, overwrite with old 'predeploy'/'deploy' if they exist.
         if 'scripts' not in new_pkg: new_pkg['scripts'] = {}
         if 'scripts' in old_pkg:
             for s in ['predeploy', 'deploy']:
@@ -142,12 +141,11 @@ class PortfolioUpdater:
                     new_pkg['scripts'][s] = old_pkg['scripts'][s]
 
         # 3. Smart Dependency Merge
-        # We want to keep local dependencies that aren't in the update, but update versions of ones that are.
         for dep_type in ['dependencies', 'devDependencies']:
             if dep_type not in old_pkg: continue
             if dep_type not in new_pkg: new_pkg[dep_type] = {}
             
-            # Add local deps that are missing in new_pkg
+            # Add local deps that are missing in new_pkg (like gh-pages)
             for dep, ver in old_pkg[dep_type].items():
                 if dep not in new_pkg[dep_type]:
                     new_pkg[dep_type][dep] = ver
@@ -165,25 +163,25 @@ class PortfolioUpdater:
         with open(new_path, 'r') as f: new_content = f.read()
 
         # Robust regex to find base property: base: "..." or base: '...'
-        # Matches: base followed by optional whitespace, colon, whitespace, quote, content, quote
         base_match = re.search(r'base\s*:\s*(["\'])(.*?)\1', old_content)
         
         if base_match:
-            base_val = base_match.group(0) # e.g., base: "/my-repo/"
-            Colors.log(f"Found existing base config: {base_val}", "info")
+            base_full_line = base_match.group(0) # e.g., base: "/SchemaFlow/"
+            Colors.log(f"Found existing base config: {base_full_line}", "info")
             
             if re.search(r'base\s*:', new_content):
                 # Replace existing base in new file
-                new_content = re.sub(r'base\s*:\s*(["\']).*?\1', base_val, new_content)
+                new_content = re.sub(r'base\s*:\s*(["\']).*?\1', base_full_line, new_content)
             else:
-                # Inject base into defineConfig
-                # Look for 'defineConfig({' or 'defineConfig({'
-                new_content = re.sub(
-                    r'(defineConfig\s*\(\s*\{)', 
-                    f'\\1\n  {base_val},', 
-                    new_content, 
-                    count=1
-                )
+                # Inject base into the return object of defineConfig
+                # This handles both defineConfig({}) and defineConfig(() => ({ ... }))
+                # Look for the first occurrence of 'return {' and inject after it
+                if "return {" in new_content:
+                    new_content = new_content.replace("return {", f"return {{\n    {base_full_line},", 1)
+                elif "defineConfig({" in new_content:
+                    new_content = new_content.replace("defineConfig({", f"defineConfig({{\n    {base_full_line},", 1)
+                else:
+                    Colors.log("Could not find injection point in vite.config.ts, manual check required.", "warn")
 
         with open(old_path, 'w') as f:
             f.write(new_content)
