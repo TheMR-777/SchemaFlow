@@ -19,7 +19,8 @@ import '@xyflow/react/dist/style.css';
 import { useSchemaStore } from '../store/useSchemaStore';
 import { TableNode } from './TableNode';
 import { JoinEdge } from './JoinEdge';
-import { Network } from 'lucide-react';
+import { Network, Map } from 'lucide-react';
+import { cn } from '../lib/utils';
 
 import { Maximize2, Minimize2 } from 'lucide-react';
 
@@ -32,7 +33,7 @@ const edgeTypes = {
 };
 
 export function Canvas() {
-  const { nodes, edges, setNodes, setEdges, layoutNodes, addTableToCanvas, fullscreenView, setFullscreenView } = useSchemaStore();
+  const { nodes, edges, setNodes, setEdges, layoutNodes, addTableToCanvas, fullscreenView, setFullscreenView, showMiniMap, toggleMiniMap } = useSchemaStore();
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const { screenToFlowPosition, fitView } = useReactFlow();
 
@@ -114,12 +115,21 @@ export function Canvas() {
       >
         <Background color="#27272a" gap={16} size={1} />
         <Controls className="bg-zinc-900 border-zinc-800 fill-zinc-400" />
-        <MiniMap 
-          nodeColor="#3f3f46" 
-          maskColor="rgba(24, 24, 27, 0.7)" 
-          className="bg-zinc-900 border-zinc-800"
-        />
+        {showMiniMap && (
+          <MiniMap 
+            nodeColor="#3f3f46" 
+            maskColor="rgba(24, 24, 27, 0.7)" 
+            className="bg-zinc-900 border-zinc-800"
+          />
+        )}
         <Panel position="top-right" className="m-4 flex items-center gap-2">
+          <button
+            onClick={toggleMiniMap}
+            className={cn("flex items-center justify-center w-8 h-8 bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 rounded-lg transition-colors shadow-lg", showMiniMap ? "text-indigo-400" : "text-zinc-500")}
+            title="Toggle Minimap"
+          >
+            <Map size={14} />
+          </button>
           <button
             onClick={handleLayout}
             className="flex items-center gap-2 bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-zinc-300 px-3 py-2 rounded-lg text-xs font-medium transition-colors shadow-lg"

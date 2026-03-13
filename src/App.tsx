@@ -10,9 +10,10 @@ import { ReactFlowProvider } from '@xyflow/react';
 import { useSchemaStore } from './store/useSchemaStore';
 import { LayoutTemplate, TableProperties, PanelLeftOpen } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { cn } from './lib/utils';
 
 function MainContent() {
-  const { fullscreenView, isSidebarOpen, toggleSidebar } = useSchemaStore();
+  const { fullscreenView, isSidebarOpen, toggleSidebar, isBottomPanelOpen } = useSchemaStore();
 
   return (
     <div className="flex flex-col flex-1 h-full relative bg-[#0a0a0a] overflow-hidden">
@@ -32,10 +33,16 @@ function MainContent() {
         {fullscreenView !== 'canvas' && (
           <motion.div
             initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
+            animate={{ 
+              height: fullscreenView === 'bottom' ? '100%' : isBottomPanelOpen ? 320 : 48, 
+              opacity: 1 
+            }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ type: "spring", bounce: 0, duration: 0.3 }}
-            className="flex-shrink-0 z-20"
+            className={cn(
+              "flex-shrink-0 z-20 w-full overflow-hidden",
+              fullscreenView === 'bottom' ? "absolute inset-0" : "relative"
+            )}
           >
             <BottomPanel />
           </motion.div>

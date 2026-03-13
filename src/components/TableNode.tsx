@@ -4,6 +4,7 @@ import { Table, Column } from '../lib/sqlParser';
 import { useSchemaStore } from '../store/useSchemaStore';
 import { cn } from '../lib/utils';
 import { Key, Link2, CheckSquare, Square, Filter, ChevronUp, ChevronDown, Trash2, Plus } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface TableNodeProps {
   data: {
@@ -44,9 +45,10 @@ export const TableNode = memo(({ data, isConnectable }: TableNodeProps) => {
         </div>
         <button 
           onClick={() => removeTableFromCanvas(nodeId)}
-          className="text-zinc-500 hover:text-red-400 transition-colors text-xs font-medium"
+          className="text-zinc-500 hover:text-red-400 transition-colors p-1 rounded-md hover:bg-red-500/10"
+          title="Remove Table"
         >
-          Remove
+          <Trash2 size={14} />
         </button>
       </div>
       
@@ -163,58 +165,68 @@ export const TableNode = memo(({ data, isConnectable }: TableNodeProps) => {
           {showFilters ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
         </button>
         
-        {showFilters && (
-          <div className="p-3 bg-zinc-900/50 space-y-2 border-t border-zinc-800/50">
-            {nodeFilters.map(filter => (
-              <div key={filter.id} className="flex flex-col gap-2 p-2 bg-[#151619] border border-zinc-800 rounded-md">
-                <div className="flex items-center gap-2">
-                  <select 
-                    value={filter.column}
-                    onChange={(e) => updateFilter(nodeId, filter.id, { column: e.target.value })}
-                    className="flex-1 bg-zinc-900 border border-zinc-700 text-zinc-300 text-[10px] rounded px-1.5 py-1 focus:outline-none focus:border-indigo-500"
-                  >
-                    {table.columns.map(c => (
-                      <option key={c.name} value={c.name}>{c.name}</option>
-                    ))}
-                  </select>
-                  <select 
-                    value={filter.operator}
-                    onChange={(e) => updateFilter(nodeId, filter.id, { operator: e.target.value })}
-                    className="w-16 bg-zinc-900 border border-zinc-700 text-zinc-300 text-[10px] rounded px-1.5 py-1 focus:outline-none focus:border-indigo-500"
-                  >
-                    <option value="=">=</option>
-                    <option value="!=">!=</option>
-                    <option value=">">&gt;</option>
-                    <option value="<">&lt;</option>
-                    <option value=">=">&gt;=</option>
-                    <option value="<=">&lt;=</option>
-                    <option value="LIKE">LIKE</option>
-                  </select>
-                  <button 
-                    onClick={() => removeFilter(nodeId, filter.id)}
-                    className="text-zinc-500 hover:text-red-400 p-1"
-                  >
-                    <Trash2 size={12} />
-                  </button>
-                </div>
-                <input 
-                  type="text"
-                  value={filter.value}
-                  onChange={(e) => updateFilter(nodeId, filter.id, { value: e.target.value })}
-                  placeholder="Value..."
-                  className="w-full bg-zinc-900 border border-zinc-700 text-zinc-300 text-[10px] rounded px-2 py-1 focus:outline-none focus:border-indigo-500"
-                />
-              </div>
-            ))}
-            
-            <button 
-              onClick={() => addFilter(nodeId, { column: table.columns[0]?.name || '', operator: '=', value: '' })}
-              className="w-full flex items-center justify-center gap-1.5 py-1.5 text-[10px] font-medium text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 rounded border border-dashed border-indigo-500/30 transition-colors"
+        <AnimatePresence initial={false}>
+          {showFilters && (
+            <motion.div 
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.2, ease: "easeInOut" }}
+              className="overflow-hidden"
             >
-              <Plus size={12} /> Add Filter
-            </button>
-          </div>
-        )}
+              <div className="p-3 bg-zinc-900/50 space-y-2 border-t border-zinc-800/50">
+                {nodeFilters.map(filter => (
+                  <div key={filter.id} className="flex flex-col gap-2 p-2 bg-[#151619] border border-zinc-800 rounded-md">
+                    <div className="flex items-center gap-2">
+                      <select 
+                        value={filter.column}
+                        onChange={(e) => updateFilter(nodeId, filter.id, { column: e.target.value })}
+                        className="flex-1 bg-zinc-900 border border-zinc-700 text-zinc-300 text-[10px] rounded px-1.5 py-1 focus:outline-none focus:border-indigo-500"
+                      >
+                        {table.columns.map(c => (
+                          <option key={c.name} value={c.name}>{c.name}</option>
+                        ))}
+                      </select>
+                      <select 
+                        value={filter.operator}
+                        onChange={(e) => updateFilter(nodeId, filter.id, { operator: e.target.value })}
+                        className="w-16 bg-zinc-900 border border-zinc-700 text-zinc-300 text-[10px] rounded px-1.5 py-1 focus:outline-none focus:border-indigo-500"
+                      >
+                        <option value="=">=</option>
+                        <option value="!=">!=</option>
+                        <option value=">">&gt;</option>
+                        <option value="<">&lt;</option>
+                        <option value=">=">&gt;=</option>
+                        <option value="<=">&lt;=</option>
+                        <option value="LIKE">LIKE</option>
+                      </select>
+                      <button 
+                        onClick={() => removeFilter(nodeId, filter.id)}
+                        className="text-zinc-500 hover:text-red-400 p-1"
+                      >
+                        <Trash2 size={12} />
+                      </button>
+                    </div>
+                    <input 
+                      type="text"
+                      value={filter.value}
+                      onChange={(e) => updateFilter(nodeId, filter.id, { value: e.target.value })}
+                      placeholder="Value..."
+                      className="w-full bg-zinc-900 border border-zinc-700 text-zinc-300 text-[10px] rounded px-2 py-1 focus:outline-none focus:border-indigo-500"
+                    />
+                  </div>
+                ))}
+                
+                <button 
+                  onClick={() => addFilter(nodeId, { column: table.columns[0]?.name || '', operator: '=', value: '' })}
+                  className="w-full flex items-center justify-center gap-1.5 py-1.5 text-[10px] font-medium text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 rounded border border-dashed border-indigo-500/30 transition-colors"
+                >
+                  <Plus size={12} /> Add Filter
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );

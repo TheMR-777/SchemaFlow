@@ -17,6 +17,9 @@ export interface AppState {
   fullscreenView: 'none' | 'canvas' | 'bottom';
   setFullscreenView: (view: 'none' | 'canvas' | 'bottom') => void;
 
+  showMiniMap: boolean;
+  toggleMiniMap: () => void;
+
   schema: Schema | null;
   setSchema: (schema: Schema) => void;
   
@@ -99,6 +102,9 @@ export const useSchemaStore = create<AppState>((set, get) => ({
   
   fullscreenView: 'none',
   setFullscreenView: (view) => set({ fullscreenView: view }),
+
+  showMiniMap: true,
+  toggleMiniMap: () => set((state) => ({ showMiniMap: !state.showMiniMap })),
 
   schema: null,
   setSchema: (schema) => set({ schema }),

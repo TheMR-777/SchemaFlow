@@ -25,7 +25,8 @@ export function generateSql(
   selectedColumns: Record<string, string[]>,
   columnSettings: Record<string, Record<string, ColumnSetting>>,
   filters: Record<string, FilterSetting[]>,
-  querySettings: QuerySettings
+  querySettings: QuerySettings,
+  shouldFormat: boolean = true
 ): string {
   if (nodes.length === 0) return '-- No tables selected';
 
@@ -60,7 +61,7 @@ export function generateSql(
       }
 
       if (alias) {
-        expr += ` AS ${alias}`;
+        expr += ` AS \`${alias}\``;
       }
       
       selectParts.push(expr);
@@ -134,6 +135,10 @@ export function generateSql(
 
   if (querySettings.limit) {
     rawSql += ` \nLIMIT ${querySettings.limit}`;
+  }
+  
+  if (!shouldFormat) {
+    return rawSql;
   }
   
   try {
